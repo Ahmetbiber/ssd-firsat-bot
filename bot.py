@@ -108,9 +108,11 @@ def threads(page):
             continue
         f = re.findall(r'<a href="/forumlar/[^"]+"[^>]*>([^<]*)</a>', part)
         lt = re.search(r'structItem-latestDate[^>]*data-timestamp="(\d+)"', part)
+        sd = re.search(r'structItem-startDate.*?data-timestamp="(\d+)"', part, re.S)
         out.append({"id": a.group(2), "title": re.sub(r"\s+", " ", clean(a.group(3))),
                     "link": BASE + a.group(1), "forum": html.unescape(f[-1]) if f else "",
-                    "latest": int(lt.group(1)) if lt else 0})
+                    "latest": int(lt.group(1)) if lt else 0,
+                    "start": int(sd.group(1)) if sd else 0})
     return out
 
 def posts(page):
@@ -222,10 +224,12 @@ class Watcher:
         self.seen.add(t["id"])
         self.dirty = True
         hit = is_ssd(t["title"]) if from_deals else is_ssd_deal_title(t["title"], t["forum"])
-        tag = "SSD" if hit else "atlandi"
+        # cevapla one cikan eski konu "yeni" degildir (son 3 saatte acilmis olmali)
+        old = not from_deals and t.get("start") and time.time() - t["start"] > 3 * 3600
+        quiet = self.first or old or (self.wn_first and not from_deals and not DEAL_FORUM.search(t["forum"]))
+        tag = ("SSD-eski" if old else "SSD") if hit else "atlandi"
         print("%s %s|%s|%s|%s" % (time.strftime("%H:%M:%S"), tag, t["forum"] or "Sicak Firsatlar",
                                   t["title"], t["link"]), flush=True)
-        quiet = self.first or (self.wn_first and not from_deals and not DEAL_FORUM.search(t["forum"]))
         if hit and not quiet:
             where = "" if from_deals or "rsat" in t["forum"] else " [%s]" % t["forum"]
             notify(t["title"] + where, t["link"])
