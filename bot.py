@@ -6,7 +6,7 @@ Ortam degiskenleri (GitHub Secrets):
   NTFY_TOPIC                              -> ntfy.sh bildirimi
   (ikisi de verilebilir; hicbiri yoksa sadece ekrana yazar)
   RUN_SECONDS  kac saniye calissin (varsayilan 20400 = 5sa 40dk)
-  INTERVAL     kac saniyede bir kontrol (varsayilan 15)
+  INTERVAL     kac saniyede bir kontrol (varsayilan 10)
   NO_GIT=1     durum dosyasini commit'leme (yerel test icin)
 
 Kullanim:
@@ -22,7 +22,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 SEEN = os.path.join(DIR, "state", "seen.json")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
 RUN_SECONDS = int(os.environ.get("RUN_SECONDS", "20400"))
-INTERVAL = int(os.environ.get("INTERVAL", "15"))
+INTERVAL = int(os.environ.get("INTERVAL", "10"))
 SAVE_EVERY = 600
 
 # ---------------------------------------------------------------- filtre
@@ -149,9 +149,10 @@ def main():
     seen_list = load_seen()
     first = seen_list is None
     seen = set(seen_list or [])
-    start = last_save = time.time()
+    start = last_save = last_upd = time.time()
+    start_sha = git_out("rev-parse", "HEAD")
     dirty = first
-    fails = 0
+    fail_since, alerted, slow = None, False, 0
     print("basladi, ilk calisma" if first else "basladi, %d konu biliniyor" % len(seen), flush=True)
 
     while time.time() - start < RUN_SECONDS:
@@ -172,21 +173,41 @@ def main():
                 else:
                     print("atlandi:", title, flush=True)
             first = False
-            if fails >= 20:
+            if alerted:
                 notify("Forum tekrar okunabiliyor, takip devam ediyor")
-            fails = 0
+            fail_since, alerted, slow = None, False, 0
         except Exception as e:
-            fails += 1
+            code = getattr(e, "code", None)
+            fail_since = fail_since or time.time()
+            # forum "yavasla/engel" derse kendini yavaslat: 20s, 40s, 80s ... en fazla 5 dk
+            slow = min(slow + 1, 5) if code in (403, 429, 503) else min(slow, 2)
             print("okuma hatasi:", e, flush=True)
-            if fails == 20:
+            if not alerted and time.time() - fail_since > 300:
                 notify("UYARI: Forum ~5 dakikadir okunamiyor (%s)" % str(e)[:100], URL)
+                alerted = True
         if dirty and time.time() - last_save > SAVE_EVERY:
             save_seen(seen)
             dirty, last_save = False, time.time()
-        time.sleep(INTERVAL)
+        # repoda yeni kod varsa kaydet ve cik; siradaki calistirma yeni kodla baslar
+        if start_sha and time.time() - last_upd > 60:
+            last_upd = time.time()
+            if git_out("fetch", "-q", "origin", "main") is not None and \
+               git_out("diff", "--name-only", start_sha, "FETCH_HEAD", "--", "bot.py", ".github"):
+                print("yeni kod bulundu, yeniden baslatiliyor", flush=True)
+                break
+        time.sleep(INTERVAL * (2 ** slow) if slow else INTERVAL)
 
     save_seen(seen)
-    print("sure doldu, sonraki calistirma devralacak", flush=True)
+    print("calisma bitti, sonraki calistirma devralacak", flush=True)
+
+def git_out(*args):
+    if os.environ.get("NO_GIT") == "1":
+        return None
+    try:
+        r = subprocess.run(["git"] + list(args), cwd=DIR, capture_output=True, text=True, timeout=60)
+        return r.stdout.strip() if r.returncode == 0 else None
+    except Exception:
+        return None
 
 if __name__ == "__main__":
     main()

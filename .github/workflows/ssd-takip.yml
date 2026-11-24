@@ -41,7 +41,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
 
-      - name: Forumu izle (15 sn arayla, ~5 sa 40 dk)
+      - name: Forumu izle (10 sn arayla, ~5 sa 40 dk)
         if: ${{ !inputs.test_bildirimi }}
         run: python3 -u bot.py
         env:
@@ -49,4 +49,4 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           RUN_SECONDS: "20400"
-          INTERVAL: "15"
+          INTERVAL: "10"
