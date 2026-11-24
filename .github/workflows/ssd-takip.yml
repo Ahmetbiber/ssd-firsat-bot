@@ -1,0 +1,49 @@
+name: SSD firsat takip
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # calisan yoksa en gec 15 dk icinde yeniden baslar
+  workflow_dispatch:
+    inputs:
+      test_bildirimi:
+        description: "Sadece test bildirimi gonder"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Ayni anda tek izleyici calisir; sonraki sirada bekler ve biten devralir
+concurrency:
+  group: ssd-takip
+  cancel-in-progress: false
+
+jobs:
+  takip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Git ayarlari
+        run: |
+          git config user.name "ssd-takip-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Test bildirimi
+        if: ${{ inputs.test_bildirimi }}
+        run: python3 bot.py ping
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+
+      - name: Forumu izle (15 sn arayla, ~5 sa 40 dk)
+        if: ${{ !inputs.test_bildirimi }}
+        run: python3 -u bot.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          RUN_SECONDS: "20400"
+          INTERVAL: "15"
