@@ -3,6 +3,9 @@ name: SSD firsat takip
 on:
   schedule:
     - cron: "*/15 * * * *"   # calisan yoksa en gec 15 dk icinde yeniden baslar
+  push:
+    branches: [main]
+    paths-ignore: ["state/**", "README.md"]
   workflow_dispatch:
     inputs:
       test_bildirimi:
@@ -30,8 +33,8 @@ jobs:
           git config user.name "ssd-takip-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Test bildirimi
-        if: ${{ inputs.test_bildirimi }}
+      - name: Test / baslangic bildirimi
+        if: ${{ inputs.test_bildirimi || github.event_name == 'push' }}
         run: python3 bot.py ping
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
