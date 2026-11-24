@@ -1,10 +1,17 @@
 # SSD Fırsat Takip Botu
 
-DonanımArşivi **Sıcak Fırsatlar** forumunu 15 saniyede bir kontrol eder. Yeni bir **SSD** konusu
-açılınca telefona başlık + link ile bildirim gönderir. Laptop, hazır sistem, kasa, mini PC,
-anakart, GPU/CPU/RAM paketleri ve SSD kutuları filtrelenir (yanlış alarm yok).
+DonanımArşivi'nde yeni bir **SSD** fırsatı görülünce telefona başlık + link ile bildirim gönderir.
 
-GitHub Actions üzerinde çalışır; bilgisayarın açık olmasına gerek yoktur.
+- **Sıcak Fırsatlar**: 15 saniyede bir yeni konular
+- **Tüm forum** ("Yeni mesajlar", dakikada bir): diğer bölümlerde açılan yeni konular
+  (başlıkta fiyat olmalı, soru konusu olmamalı) ve fırsat/alışveriş konularına yazılan
+  yeni cevaplar (aynı satırda SSD + fiyat; alıntı ve imzalar hariç)
+
+Laptop, hazır sistem, kasa, mini PC, anakart, GPU/CPU/RAM paketleri ve SSD kutuları filtrelenir.
+
+> **Not:** Forum Cloudflare ile GitHub Actions makinelerini engelliyor (HTTP 403), bu yüzden
+> workflow'un otomatik başlatması kapalı. Botu ev internetine bağlı bir cihazda çalıştır:
+> `NO_GIT=1 NTFY_TOPIC=<konu-adin> python3 bot.py`
 
 ## Kurulum
 
