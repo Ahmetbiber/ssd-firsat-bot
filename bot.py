@@ -139,6 +139,13 @@ def main():
         notify("Test bildirimi: SSD takip botu calisiyor", URL)
         return
 
+    has_notify = os.environ.get("NTFY_TOPIC") or (
+        os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"))
+    if not has_notify and os.environ.get("NO_GIT") != "1":
+        print("HATA: NTFY_TOPIC veya TELEGRAM_* secret'i tanimli degil. "
+              "Repo > Settings > Secrets and variables > Actions bolumunden ekle.", flush=True)
+        sys.exit(1)
+
     seen_list = load_seen()
     first = seen_list is None
     seen = set(seen_list or [])
