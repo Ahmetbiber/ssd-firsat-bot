@@ -26,13 +26,19 @@ INTERVAL = int(os.environ.get("INTERVAL", "15"))
 SAVE_EVERY = 600
 
 # ---------------------------------------------------------------- filtre
+TR = str.maketrans("çşğüöı", "csguoi")
+# Magaza adlari ("Vatan PC", "Vatan Bilgisayar") urunle karismasin
+STORES = re.compile(r"\b(vatan|sinerji|tek|gaming ?gen|inceh?esap|ebrar)\s?(pc|bilgisayar)\w*")
+
 def norm(t):
-    return t.replace("İ", "i").replace("I", "i").lower().replace("ı", "i")
+    t = t.replace("İ", "i").replace("I", "i").lower().translate(TR)
+    return STORES.sub(" magaza ", t)
 
 # SSD oldugunu gosteren seyler
 POS = re.compile(r"\bssd\b|\bnvme\b|\bnmve\b|\bnvm\b|"
     r"990 ?(pro|evo)|980 ?pro|samsung 980|970 ?evo|870 ?(evo|qvo)|9100 ?pro|samsung t[579]\b|"
-    r"\bsn(5000|580|570|770|850x?|8100|7100)\b|wd ?black|"
+    r"\bsn(5000|580|570|770|850x?|8100|7100)\b|wd ?black|wd_black|"
+    r"predator gm\d|\bxs[12]000\b|extreme (pro )?portable|crucial x(6|8|9|10)\b|"
     r"\bnv[123]\b|kc3000|fury renegade|\ba400\b|"
     r"crucial (p3|p5|t500|t700|t705|mx500|bx500)|\b(t500|t700|t705|mx500|bx500)\b|"
     r"exceria|\bnm\d{3,4}\b|lexar|legend \d{3}|gammix|spatium|\bmp(600|700|44|33)\b|"
@@ -47,10 +53,10 @@ NEG = re.compile(r"laptop|notebook|diz[uü]st[uü]|masa[uü]st[uü]|bilgisayar|h
     r"\brtx\b|\bgtx\b|\brx ?\d{3,4}|ekran karti|i[3579][ -]\d|ryzen|core ultra|i[sş]lemci|"
     r"\bram\b|\bddr[345]\b|"
     r"vivobook|zenbook|expertbook|\btuf\b|\brog\b|ideapad|thinkpad|thinkbook|\blegion\b|\bloq\b|yoga|"
-    r"pavilion|victus|\bomen\b|elitebook|probook|aspire|\bnitro\b|predator|\bswift\b|inspiron|vostro|"
-    r"latitude|\bxps\b|alienware|\bmonster\b|abra|tulpar|casper|excalibur|matebook|katana|cyborg|"
+    r"pavilion|victus|\bomen\b|elitebook|probook|aspire|\bnitro\b|helios|triton|\bswift\b|inspiron|vostro|"
+    r"latitude|\bxps\b|alienware|\bmonster\b|\babra\b|tulpar|casper|excalibur|matebook|katana|cyborg|"
     r"msi (thin|modern|prestige|sword|crosshair|vector|raider)|galaxy book|surface|chromebook|"
-    r"\binc\b|\d+[.,]\d\s?(\"|inc)|\b1[3-8][.,]\d\b|\d{3}\s?hz|\bfhd\b|\bqhd\b|oled|ips|"
+    r"\b(1[0-9]|2[0-9]|3[0-9])([.,]\d)?\s?(\"|inc|inch|ekran)|\d{3}\s?hz|\bfhd\b|\bqhd\b|\boled\b|\bips\b|"
     r"kutu|enclosure|adapt[oö]r|so[gğ]utucu|heatsink|kizak|\bdock\b")
 
 def is_ssd(title):
