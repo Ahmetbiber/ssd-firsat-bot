@@ -147,7 +147,7 @@ def main():
         sys.exit(1)
 
     seen_list = load_seen()
-    first = seen_list is None
+    first = not seen_list   # dosya yok ya da bos -> ilk calisma, bildirim atma
     seen = set(seen_list or [])
     start = last_save = last_upd = time.time()
     start_sha = git_out("rev-parse", "HEAD")
