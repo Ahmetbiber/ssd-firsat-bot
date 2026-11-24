@@ -1,11 +1,13 @@
 name: SSD firsat takip
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"   # calisan yoksa en gec 15 dk icinde yeniden baslar
-  push:
-    branches: [main]
-    paths-ignore: ["state/**", "README.md"]
+  # DURDURULDU: forum GitHub makinelerini Cloudflare ile engelliyor (HTTP 403).
+  # Engel kalkarsa asagidaki satirlarin basindaki # isaretlerini kaldir.
+  # schedule:
+  #   - cron: "*/15 * * * *"
+  # push:
+  #   branches: [main]
+  #   paths-ignore: ["state/**", "README.md"]
   workflow_dispatch:
     inputs:
       test_bildirimi:
