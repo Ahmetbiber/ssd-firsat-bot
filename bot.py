@@ -66,7 +66,7 @@ def is_ssd(title):
 # ---------------------------------------------------------------- forum
 def fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "tr"})
-    with urllib.request.urlopen(req, timeout=30) as r:
+    with urllib.request.urlopen(req, timeout=60) as r:
         return r.read().decode("utf-8", "replace")
 
 def threads(page):
