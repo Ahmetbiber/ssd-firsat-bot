@@ -22,6 +22,8 @@ if errorlevel 1 (
   exit /b
 )
 
+echo Test bildirimi gonderiliyor (bilgisayar + telefon)...
+python bot.py ping
 echo SSD takip basladi. Bu pencereyi kapatma (kucultebilirsin).
 :dongu
 python bot.py

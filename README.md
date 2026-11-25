@@ -24,6 +24,8 @@ Laptop, hazır sistem, kasa, mini PC, anakart, GPU/CPU/RAM paketleri ve SSD kutu
 4. **Bilgisayar açılınca otomatik başlasın:** `baslat.bat`'a sağ tık → **Kısayol oluştur**.
    `Win + R` → `shell:startup` yaz → Enter. Açılan klasöre kısayolu taşı.
 
+Her açılışta bir test bildirimi gelir. SSD bulununca **Windows bildirimi** (tarayıcı gerekmez) ve
+ntfy ile telefona bildirim gelir; Windows bildirimine tıklayınca konu açılır.
 Bot çökerse pencere 30 saniye sonra kendini yeniden başlatır. İlk çalıştırmada mevcut konular
 bildirilmez, sadece bundan sonra açılanlar bildirilir.
 
