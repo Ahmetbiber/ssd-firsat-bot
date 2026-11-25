@@ -1,0 +1,4 @@
+# Hikayeleri takip edilecek Instagram hesaplari. Her satira bir hesap yaz.
+# @hesap, instagram.com/hesap ya da sadece hesap adi olabilir. # ile baslayan satirlar yok sayilir.
+# Ornek:
+# @firsat_hesabi

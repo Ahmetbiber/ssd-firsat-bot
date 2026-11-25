@@ -32,6 +32,26 @@ ntfy ile telefona bildirim gelir; Windows bildirimine tıklayınca konu açılı
 Bot çökerse pencere 30 saniye sonra kendini yeniden başlatır. İlk çalıştırmada mevcut konular
 bildirilmez, sadece bundan sonra açılanlar bildirilir.
 
+## Instagram hikayeleri (isteğe bağlı, sadece kendi bilgisayarında)
+
+Bot, takip ettiğin hesapların hikayelerini ~5 dakikada bir kontrol eder, hikayedeki yazıyı okur (OCR)
+ve SSD fırsatı görürse bildirim gönderir. Senin Instagram hesabınla çalışır.
+
+> ⚠️ Instagram otomatik okumayı kurallarıyla yasaklıyor. Bot riski azaltmak için seyrek ve rastgele
+> aralıklarla kontrol eder, ama hesabının kısıtlanma ihtimali sıfır değildir. Riski sen üstleniyorsun.
+
+1. **Tesseract OCR kur** (hikayedeki yazıyı okumak için):
+   [github.com/UB-Mannheim/tesseract/wiki](https://github.com/UB-Mannheim/tesseract/wiki) → `tesseract-ocr-w64-setup-...exe` indir.
+   Kurulumda **Additional language data** altında **Turkish**'i işaretle. Kurulum yerini değiştirme
+   (`C:\Program Files\Tesseract-OCR`).
+2. **Giriş yap:** `instagram_giris.bat`'a çift tıkla. Kullanıcı adını ve şifreni sorar (şifre ekranda
+   görünmez). Şifren sadece Instagram'a gider; bilgisayarda sadece oturum kaydedilir.
+3. **Hesapları yaz:** `instagram_hesaplari.txt` dosyasına her satıra bir hesap yaz (`@hesapadi`).
+4. `baslat.bat`'ı kapatıp yeniden aç. Pencerede `instagram takibi acik: ...` yazmalı.
+
+Oturum düşerse telefona "Instagram oturumu geçersiz" bildirimi gelir; `instagram_giris.bat`'ı tekrar çalıştır.
+Kontrol aralığını değiştirmek için `baslat.bat` içine `set IG_EVERY=600` (saniye) ekleyebilirsin.
+
 ## GitHub Actions ile kurulum (şu an forum engellediği için çalışmıyor)
 
 Bildirim için **birini** seç (ikisi birden de olur):

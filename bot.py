@@ -7,6 +7,7 @@ Izlenenler:
      - baska bolumlerde acilan yeni konular (baslikta fiyat olmali, soru olmamali)
      - firsat/alisveris konularina yazilan yeni cevaplar (ayni satirda SSD + fiyat)
   3) telegram_kanallari.txt'deki herkese acik Telegram kanallari, dakikada bir
+  4) (istege bagli) instagram_hesaplari.txt'deki hesaplarin hikayeleri, ~5 dakikada bir (instagram.py)
 
 Ortam degiskenleri:
   NTFY_TOPIC                              -> ntfy.sh bildirimi
@@ -257,7 +258,8 @@ def save_state(st):
     d = {"threads": keep,
          "latest": {k: v for k, v in st["latest"].items() if k in recent},
          "maxpost": {k: v for k, v in st["maxpost"].items() if k in recent},
-         "tg": st.get("tg", {})}
+         "tg": st.get("tg", {}),
+         "ig": st.get("ig", {})}
     with open(SEEN + ".tmp", "w") as f:
         json.dump(d, f)
     os.replace(SEEN + ".tmp", SEEN)
@@ -417,6 +419,15 @@ def main():
             sys.exit(1)
 
     w = Watcher()
+    ig = None
+    try:
+        sys.path.insert(0, DIR)
+        import instagram
+        if instagram.configured():
+            ig = instagram.IGWatcher(w.st)
+            print("instagram takibi acik: %s" % ", ".join(instagram.read_list(instagram.ACC_FILE)), flush=True)
+    except Exception as e:
+        print("instagram modulu yuklenemedi (forum/telegram takibi devam ediyor): %r" % e, flush=True)
     start = last_save = last_upd = time.time()
     last_wn = last_tg = 0
     start_sha = git_out("rev-parse", "HEAD")
@@ -428,6 +439,9 @@ def main():
         if time.time() - last_tg >= TG_EVERY:
             last_tg = time.time()
             w.guarded(w.check_telegram)
+        if ig and ig.due():
+            ig.check(notify, is_ssd, norm, POS, lambda m: print(m, flush=True))
+            w.dirty = True
         w.first = False
         if w.dirty and time.time() - last_save > SAVE_EVERY:
             w.save()
