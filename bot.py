@@ -6,6 +6,7 @@ Izlenenler:
   2) Tum forumun "Yeni mesajlar" sayfasi, dakikada bir:
      - baska bolumlerde acilan yeni konular (baslikta fiyat olmali, soru olmamali)
      - firsat/alisveris konularina yazilan yeni cevaplar (ayni satirda SSD + fiyat)
+  3) telegram_kanallari.txt'deki herkese acik Telegram kanallari, dakikada bir
 
 Ortam degiskenleri:
   NTFY_TOPIC                              -> ntfy.sh bildirimi
@@ -33,6 +34,9 @@ RUN_SECONDS = int(os.environ.get("RUN_SECONDS", "0")) or 10 ** 9
 INTERVAL = int(os.environ.get("INTERVAL", "15"))
 WN_EVERY = 60
 SAVE_EVERY = 120
+TG_FILE = os.path.join(DIR, "telegram_kanallari.txt")
+TG_DEFAULT = ["indirim_koparan", "cihaztv"]
+TG_EVERY = 60
 DEAL_FORUM = re.compile(r"f[iı]rsat|al[iı][sş]veri[sş]|sat[iı]l[iı]k|pazar|ikinci el|kampanya|indirim", re.I)
 
 # ---------------------------------------------------------------- filtre
@@ -115,6 +119,44 @@ def threads(page):
                     "latest": int(lt.group(1)) if lt else 0,
                     "start": int(sd.group(1)) if sd else 0})
     return out
+
+def tg_channels():
+    """telegram_kanallari.txt: her satira bir kanal (@ad, t.me/ad ya da ad). # ile yorum."""
+    try:
+        lines = open(TG_FILE, encoding="utf-8").read().splitlines()
+    except Exception:
+        return TG_DEFAULT
+    out = []
+    for l in lines:
+        l = l.split("#")[0].strip()
+        m = re.search(r"(?:t\.me/(?:s/)?|@)?([A-Za-z0-9_]{4,})/?$", l)
+        if l and m:
+            out.append(m.group(1))
+    return out
+
+def tg_messages(page):
+    """t.me/s/<kanal> sayfasi -> [(no, satirlar)]"""
+    out = []
+    for part in re.split(r'<div class="tgme_widget_message_wrap', page)[1:]:
+        pid = re.search(r'data-post="[^"/]+/(\d+)"', part)
+        t = re.search(r'<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>', part, re.S)
+        if not (pid and t):
+            continue
+        b = re.sub(r"<br\s*/?>", "\n", t.group(1))
+        lines = [re.sub(r"\s+", " ", clean(l)) for l in b.split("\n")]
+        out.append((int(pid.group(1)), [l for l in lines if l]))
+    return out
+
+def tg_hit(lines):
+    """Firsat kanali: ilk satir (urun adi) SSD ise, ya da herhangi bir satirda SSD + fiyat varsa."""
+    if not lines:
+        return None
+    if is_ssd(lines[0]):
+        return lines[0]
+    for l in lines[1:4]:
+        if is_ssd_deal_line(l):
+            return l
+    return None
 
 def posts(page):
     """Konu sayfasi -> [(post_id, timestamp, satirlar)]; alintilar ve imzalar haric."""
@@ -205,6 +247,7 @@ def load_state():
         return None
     d.setdefault("latest", {})
     d.setdefault("maxpost", {})
+    d.setdefault("tg", {})
     return d
 
 def save_state(st):
@@ -213,7 +256,8 @@ def save_state(st):
     recent = set(sorted(st["latest"], key=int)[-500:])
     d = {"threads": keep,
          "latest": {k: v for k, v in st["latest"].items() if k in recent},
-         "maxpost": {k: v for k, v in st["maxpost"].items() if k in recent}}
+         "maxpost": {k: v for k, v in st["maxpost"].items() if k in recent},
+         "tg": st.get("tg", {})}
     with open(SEEN + ".tmp", "w") as f:
         json.dump(d, f)
     os.replace(SEEN + ".tmp", SEEN)
@@ -242,7 +286,7 @@ class Watcher:
     def __init__(self):
         st = load_state()
         self.first = st is None
-        self.st = st or {"threads": [], "latest": {}, "maxpost": {}}
+        self.st = st or {"threads": [], "latest": {}, "maxpost": {}, "tg": {}}
         self.seen = set(self.st["threads"])
         self.dirty = self.first
         # tum forum ilk kez taraniyorsa diger bolumlerin eski konularini sessizce kaydet
@@ -323,6 +367,33 @@ class Watcher:
                 notify("UYARI: Forum ~5 dakikadir okunamiyor (%s)" % str(e)[:100], URL, head="SSD takip")
                 self.alerted = True
 
+    def check_telegram(self):
+        for ch in tg_channels():
+            page, _ = fetch("https://t.me/s/" + ch)
+            msgs = tg_messages(page)
+            if not msgs:
+                print("%s telegram: %s kanalinda mesaj okunamadi (kanal ozel ya da adi yanlis olabilir)"
+                      % (time.strftime("%H:%M:%S"), ch), flush=True)
+                continue
+            last = self.st["tg"].get(ch)
+            top = max(n for n, _ in msgs)
+            if last is None:                    # kanali ilk kez goruyoruz: mevcut mesajlari bildirme
+                self.st["tg"][ch] = top
+                self.dirty = True
+                print("%s telegram: %s eklendi (son mesaj %d)" % (time.strftime("%H:%M:%S"), ch, top), flush=True)
+                continue
+            for n, lines in sorted(msgs):
+                if n <= last:
+                    continue
+                hit = tg_hit(lines)
+                link = "https://t.me/%s/%d" % (ch, n)
+                print("%s %s|Telegram %s|%s|%s" % (time.strftime("%H:%M:%S"), "SSD" if hit else "atlandi",
+                                                   ch, (lines[0] if lines else "")[:120], link), flush=True)
+                if hit:
+                    notify(hit[:150] + " [Telegram: %s]" % ch, link)
+            self.st["tg"][ch] = max(last, top)
+            self.dirty = True
+
     def save(self):
         self.st["threads"] = list(self.seen)
         save_state(self.st)
@@ -347,13 +418,16 @@ def main():
 
     w = Watcher()
     start = last_save = last_upd = time.time()
-    last_wn = 0
+    last_wn = last_tg = 0
     start_sha = git_out("rev-parse", "HEAD")
     while time.time() - start < RUN_SECONDS:
         w.guarded(w.check_deals)
         if time.time() - last_wn >= WN_EVERY:
             last_wn = time.time()
             w.guarded(w.check_whats_new)
+        if time.time() - last_tg >= TG_EVERY:
+            last_tg = time.time()
+            w.guarded(w.check_telegram)
         w.first = False
         if w.dirty and time.time() - last_save > SAVE_EVERY:
             w.save()

@@ -1,0 +1,4 @@
+# Takip edilen herkese acik Telegram kanallari. Her satira bir kanal yaz.
+# @kanal, t.me/kanal ya da sadece kanal adi olabilir. # ile baslayan satirlar yok sayilir.
+indirim_koparan
+cihaztv

@@ -7,6 +7,9 @@ DonanımArşivi'nde yeni bir **SSD** fırsatı görülünce telefona başlık + 
   (başlıkta fiyat olmalı, soru konusu olmamalı) ve fırsat/alışveriş konularına yazılan
   yeni cevaplar (aynı satırda SSD + fiyat; alıntı ve imzalar hariç)
 
+- **Telegram kanalları** (dakikada bir): `telegram_kanallari.txt` dosyasındaki herkese açık kanallar.
+  Kanal eklemek için dosyaya yeni satıra `@kanaladi` ya da `t.me/kanaladi` yaz, botu yeniden başlat.
+
 Laptop, hazır sistem, kasa, mini PC, anakart, GPU/CPU/RAM paketleri ve SSD kutuları filtrelenir.
 
 > **Not:** Forum Cloudflare ile GitHub Actions makinelerini engelliyor (HTTP 403), bu yüzden
