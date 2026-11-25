@@ -13,7 +13,21 @@ Laptop, hazır sistem, kasa, mini PC, anakart, GPU/CPU/RAM paketleri ve SSD kutu
 > workflow'un otomatik başlatması kapalı. Botu ev internetine bağlı bir cihazda çalıştır:
 > `NO_GIT=1 NTFY_TOPIC=<konu-adin> python3 bot.py`
 
-## Kurulum
+## Windows bilgisayarda çalıştırma (önerilen)
+
+1. **Python kur:** [python.org/downloads](https://www.python.org/downloads/) → kurulumun ilk ekranında
+   **"Add python.exe to PATH"** kutusunu işaretle.
+2. **Botu indir:** Bu sayfada yeşil **Code** → **Download ZIP** → ZIP'i bir klasöre çıkar
+   (ör. `Belgeler\ssd-firsat-bot`).
+3. **Çalıştır:** Klasördeki **`baslat.bat`** dosyasına çift tıkla. İlk seferde ntfy konu adını sorar,
+   yaz ve Enter'a bas. Siyah pencere açık kaldığı sürece takip çalışır (küçültebilirsin).
+4. **Bilgisayar açılınca otomatik başlasın:** `baslat.bat`'a sağ tık → **Kısayol oluştur**.
+   `Win + R` → `shell:startup` yaz → Enter. Açılan klasöre kısayolu taşı.
+
+Bot çökerse pencere 30 saniye sonra kendini yeniden başlatır. İlk çalıştırmada mevcut konular
+bildirilmez, sadece bundan sonra açılanlar bildirilir.
+
+## GitHub Actions ile kurulum (şu an forum engellediği için çalışmıyor)
 
 Bildirim için **birini** seç (ikisi birden de olur):
 
